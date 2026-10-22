@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M.K. Service - बुकिंग एवं टेक्नीशियन मैनेजमेंट</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #eef2f5;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            padding-bottom: 50px;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+            font-weight: 600;
+        }
+        .btn-whatsapp:hover {
+            background-color: #1da851;
+            color: white;
+        }
+        .btn-tech {
+            background-color: #6f42c1;
+            color: white;
+            font-weight: 600;
+        }
+        .btn-tech:hover {
+            background-color: #59359a;
+            color: white;
+        }
+        .badge-confirmed {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        .badge-pending {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.88rem;
+        }
+        @media (max-width: 768px) {
+            .mobile-card-view { display: block; }
+            .desktop-table-view { display: none; }
+        }
+        @media (min-width: 769px) {
+            .mobile-card-view { display: none; }
+            .desktop-table-view { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-primary sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fs-4 fw-bold" href="#">
+                <i class="fa-solid fa-wrench me-2"></i>M.K. Service Management
+            </a>
+            <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#techManagerModal">
+                <i class="fa-solid fa-user-gear me-1"></i>टेक्नीशियन लिस्ट (+ जोड़ा/देखें)
+            </button>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+
+        <!-- Quick Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card bg-primary text-white p-3">
+                    <div class="small text-white-50">कुल बुकिंग</div>
+                    <div class="fs-3 fw-bold" id="statTotal">0</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-success text-white p-3">
+                    <div class="small text-white-50">कन्फर्म बुकिंग</div>
+                    <div class="fs-3 fw-bold" id="statConfirmed">0</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-warning text-dark p-3">
+                    <div class="small text-dark-50">पेंडिंग बुकिंग</div>
+                    <div class="fs-3 fw-bold" id="statPending">0</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-info text-white p-3">
+                    <div class="small text-white-50">आज की बुकिंग</div>
+                    <div class="fs-3 fw-bold" id="statToday">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Booking Form -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0 text-primary">
+                            <i class="fa-solid fa-user-plus me-2"></i>नई बुकिंग / अपडेट
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="bookingForm" onsubmit="handleFormSubmit(event)">
+                            <input type="hidden" id="bookingId" value="">
+
+                            <div class="mb-3">
+                                <label for="customerName" class="form-label">कस्टमर का नाम *</label>
+                                <input type="text" class="form-control" id="customerName" placeholder="जैसे: राहुल कुमार" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="customerPhone" class="form-label">कस्टमर मोबाइल नंबर *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">+91</span>
+                                    <input type="tel" class="form-control" id="customerPhone" placeholder="10 अंकों का नंबर" pattern="[0-9]{10}" maxlength="10" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="serviceType" class="form-label">सर्विस का प्रकार *</label>
+                                <select class="form-select" id="serviceType" required>
+                                    <option value="" selected disabled>सर्विस चुनें...</option>
+                                    <option value="गीजर रिपेयर / सर्विस">गीजर (Geyser) रिपेयर / इंस्टॉल</option>
+                                    <option value="वाशिंग मशीन रिपेयर">वाशिंग मशीन रिपेयर / सर्विस</option>
+                                    <option value="AC रिपेयर & सर्विस">AC रिपेयर & सर्विस</option>
+                                    <option value="सिंगल डोर फ्रिज रिपेयर">सिंगल डोर फ्रिज रिपेयर</option>
+                                    <option value="डबल डोर फ्रिज रिपेयर">डबल डोर फ्रिज रिपेयर</option>
+                                    <option value="RO / वाटर प्यूरीफायर">RO / वाटर प्यूरीफायर सर्विस</option>
+                                    <option value="माइक्रोवेव ओवन रिपेयर">माइक्रोवेव ओवन रिपेयर</option>
+                                    <option value="TV / LED रिपेयर">TV / LED रिपेयर</option>
+                                    <option value="इलेक्ट्रिशियन वर्क">इलेक्ट्रिशियन वर्क</option>
+                                    <option value="अन्य होम एप्लायंस">अन्य एप्लायंस सर्विस</option>
+                                </select>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <label for="bookingDate" class="form-label">तारीख *</label>
+                                    <input type="date" class="form-control" id="bookingDate" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="bookingTime" class="form-label">समय स्लॉट *</label>
+                                    <select class="form-select" id="bookingTime" required>
+                                        <option value="सुबह 09:00 AM - 12:00 PM">सुबह (09 AM - 12 PM)</option>
+                                        <option value="दोपहर 12:00 PM - 03:00 PM">दोपहर (12 PM - 03 PM)</option>
+                                        <option value="शाम 03:00 PM - 06:00 PM">शाम (03 PM - 06 PM)</option>
+                                        <option value="शाम 06:00 PM - 08:00 PM">शाम (06 PM - 08 PM)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="customerAddress" class="form-label">पूरा पता (Address) *</label>
+                                <textarea class="form-control" id="customerAddress" rows="2" placeholder="मकान नंबर, लैंडमार्क, क्षेत्र..." required></textarea>
+                            </div>
+
+                            <!-- Saved Technician Dropdown Selection -->
+                            <div class="p-3 mb-3 bg-light rounded border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="assignedTechSelect" class="form-label mb-0">
+                                        <i class="fa-solid fa-user-gear me-1 text-primary"></i>टेक्नीशियन असाइन करें
+                                    </label>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#techManagerModal">
+                                        + नया जोड़ें
+                                    </button>
+                                </div>
+                                <select class="form-select" id="assignedTechSelect">
+                                    <option value="">-- कोई टेक्नीशियन असाइन नहीं --</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="bookingStatus" class="form-label">बुकिंग स्टेटस *</label>
+                                <select class="form-select" id="bookingStatus" required>
+                                    <option value="कन्फर्म">कन्फर्म (Confirmed)</option>
+                                    <option value="पेंडिंग">पेंडिंग (Pending)</option>
+                                </select>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                    <i class="fa-solid fa-floppy-disk me-2"></i>बुकिंग सेव करें
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary d-none" id="cancelEditBtn" onclick="resetForm()">
+                                    रद्द करें
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Table -->
+            <div class="col-lg-7">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fa-solid fa-list-check me-2 text-primary"></i>बुकिंग लिस्ट
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="खोजें..." onkeyup="filterBookings()">
+                            <select id="statusFilter" class="form-select form-select-sm" onchange="filterBookings()" style="width: 120px;">
+                                <option value="all">सभी</option>
+                                <option value="कन्फर्म">कन्फर्म</option>
+                                <option value="पेंडिंग">पेंडिंग</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive desktop-table-view">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>कस्टमर</th>
+                                        <th>सर्विस</th>
+                                        <th>तारीख/समय</th>
+                                        <th>टेक्नीशियन</th>
+                                        <th class="text-end">एक्शन</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookingTableBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="p-3 mobile-card-view" id="mobileCardsContainer"></div>
+                        <div id="noDataMessage" class="text-center py-5 d-none text-muted">कोई बुकिंग रिकॉर्ड नहीं मिला।</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 1: Message Dispatch Modal -->
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fs-6"><i class="fa-paper-plane me-2"></i>मैसेज भेजें</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-pills nav-justified mb-3" id="msgTab" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active fw-semibold" id="cust-tab" data-bs-toggle="pill" data-bs-target="#custMsg" type="button" onclick="switchMessageType('customer')">
+                                <i class="fa-solid fa-user me-1"></i>कस्टमर को
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link fw-semibold" id="tech-tab" data-bs-toggle="pill" data-bs-target="#techMsg" type="button" onclick="switchMessageType('technician')">
+                                <i class="fa-solid fa-user-gear me-1"></i>टेक्नीशियन को
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div id="techSelectArea" class="mb-3 d-none">
+                        <label class="form-label">टेक्नीशियन चुनें:</label>
+                        <select class="form-select" id="modalTechSelect" onchange="onModalTechSelectChange()">
+                            <!-- Dynamic saved technicians -->
+                        </select>
+                    </div>
+
+                    <div class="bg-light p-3 rounded border mb-3 text-secondary small" id="previewText" style="white-space: pre-wrap;"></div>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-whatsapp btn-lg" onclick="sendWhatsApp()">
+                            <i class="fa-brands fa-whatsapp me-2"></i>WhatsApp पर भेजें
+                        </button>
+                        <button class="btn btn-primary btn-lg" onclick="sendSMS()">
+                            <i class="fa-solid fa-comment-sms me-2"></i>SMS ऐप द्वारा भेजें
+                        </button>
+                        <button class="btn btn-outline-dark" onclick="copyText()">
+                            <i class="fa-regular fa-copy me-2"></i>📋 मैसेज कॉपी करें
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Technician Directory Manager -->
+    <div class="modal fade" id="techManagerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fs-6"><i class="fa-solid fa-user-gear me-2"></i>टेक्नीशियन मैनेज करें</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="techForm" onsubmit="addTechnician(event)" class="mb-4">
+                        <div class="row g-2">
+                            <div class="col-5">
+                                <input type="text" id="newTechName" class="form-control form-control-sm" placeholder="नाम (जैसे: अमित)" required>
+                            </div>
+                            <div class="col-5">
+                                <input type="tel" id="newTechPhone" class="form-control form-control-sm" placeholder="मोबाइल (10 अंक)" pattern="[0-9]{10}" maxlength="10" required>
+                            </div>
+                            <div class="col-2">
+                                <button type="submit" class="btn btn-success btn-sm w-100"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <h6 class="fw-bold text-secondary mb-2">सेव किए गए टेक्नीशियन list:</h6>
+                    <ul class="list-group list-group-flush border-top" id="techListGroup">
+                        <!-- Dynamic list -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let bookings = JSON.parse(localStorage.getItem('mk_service_bookings')) || [];
+        let technicians = JSON.parse(localStorage.getItem('mk_service_techs')) || [
+            { id: 'T1', name: 'अमित कुमार', phone: '9876543210' },
+            { id: 'T2', name: 'संजय शर्मा', phone: '9123456789' }
+        ];
+
+        let currentBooking = null;
+        let activeMsgType = 'customer';
+        let selectedTechForMsg = null;
+        let messageModal = null;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById('bookingDate').valueAsDate = new Date();
+            messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+            renderTechnicianDropdowns();
+            renderBookings();
+        });
+
+        function saveBookingsToStorage() {
+            localStorage.setItem('mk_service_bookings', JSON.stringify(bookings));
+        }
+
+        function saveTechsToStorage() {
+            localStorage.setItem('mk_service_techs', JSON.stringify(technicians));
+        }
+
+        // Add New Technician
+        function addTechnician(e) {
+            e.preventDefault();
+            const name = document.getElementById('newTechName').value.trim();
+            const phone = document.getElementById('newTechPhone').value.trim();
+
+            if(name && phone) {
+                const newTech = { id: 'T-' + Date.now(), name, phone };
+                technicians.push(newTech);
+                saveTechsToStorage();
+                renderTechnicianDropdowns();
+                document.getElementById('techForm').reset();
+            }
+        }
+
+        // Delete Technician
+        function deleteTechnician(id) {
+            if(confirm('क्या आप इस टेक्नीशियन को लिस्ट से हटाना चाहते हैं?')) {
+                technicians = technicians.filter(t => t.id !== id);
+                saveTechsToStorage();
+                renderTechnicianDropdowns();
+            }
+        }
+
+        // Render Techs in Dropdowns & Manager
+        function renderTechnicianDropdowns() {
+            const formSelect = document.getElementById('assignedTechSelect');
+            const modalSelect = document.getElementById('modalTechSelect');
+            const listGroup = document.getElementById('techListGroup');
+
+            formSelect.innerHTML = '<option value="">-- कोई टेक्नीशियन असाइन नहीं --</option>';
+            modalSelect.innerHTML = '';
+            listGroup.innerHTML = '';
+
+            if (technicians.length === 0) {
+                listGroup.innerHTML = '<li class="list-group-item text-muted small text-center py-3">कोई टेक्नीशियन सेव नहीं है।</li>';
+            }
+
+            technicians.forEach(t => {
+                // Form select
+                const opt1 = document.createElement('option');
+                opt1.value = t.id;
+                opt1.textContent = `${t.name} (${t.phone})`;
+                formSelect.appendChild(opt1);
+
+                // Modal select
+                const opt2 = document.createElement('option');
+                opt2.value = t.id;
+                opt2.textContent = `${t.name} (${t.phone})`;
+                modalSelect.appendChild(opt2);
+
+                // Tech Manager List Item
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center px-1 py-2';
+                li.innerHTML = `
+                    <div>
+                        <strong class="d-block text-dark">${escapeHtml(t.name)}</strong>
+                        <small class="text-muted">+91 ${escapeHtml(t.phone)}</small>
+                    </div>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteTechnician('${t.id}')"><i class="fa-solid fa-trash"></i></button>
+                `;
+                listGroup.appendChild(li);
+            });
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('bookingId').value;
+            const name = document.getElementById('customerName').value.trim();
+            const phone = document.getElementById('customerPhone').value.trim();
+            const service = document.getElementById('serviceType').value;
+            const date = document.getElementById('bookingDate').value;
+            const time = document.getElementById('bookingTime').value;
+            const address = document.getElementById('customerAddress').value.trim();
+            const techId = document.getElementById('assignedTechSelect').value;
+            const status = document.getElementById('bookingStatus').value;
+
+            const techObj = technicians.find(t => t.id === techId) || null;
+
+            if (id) {
+                const idx = bookings.findIndex(b => b.id === id);
+                if (idx !== -1) {
+                    bookings[idx] = { ...bookings[idx], name, phone, service, date, time, address, assignedTech: techObj, status };
+                    currentBooking = bookings[idx];
+                }
+            } else {
+                const newB = {
+                    id: 'MK-' + Date.now().toString().slice(-6),
+                    name, phone, service, date, time, address, assignedTech: techObj, status
+                };
+                bookings.unshift(newB);
+                currentBooking = newB;
+            }
+
+            saveBookingsToStorage();
+            renderBookings();
+            resetForm();
+            openModal(currentBooking, 'customer');
+        }
+
+        function openModal(b, type = 'customer') {
+            currentBooking = b;
+            activeMsgType = type;
+            
+            if(type === 'customer') {
+                document.getElementById('cust-tab').classList.add('active');
+                document.getElementById('tech-tab').classList.remove('active');
+                document.getElementById('techSelectArea').classList.add('d-none');
+            } else {
+                document.getElementById('tech-tab').classList.add('active');
+                document.getElementById('cust-tab').classList.remove('active');
+                document.getElementById('techSelectArea').classList.remove('d-none');
+
+                if (b.assignedTech) {
+                    document.getElementById('modalTechSelect').value = b.assignedTech.id;
+                    selectedTechForMsg = b.assignedTech;
+                } else if(technicians.length > 0) {
+                    document.getElementById('modalTechSelect').value = technicians[0].id;
+                    selectedTechForMsg = technicians[0];
+                }
+            }
+
+            updatePreviewText();
+            messageModal.show();
+        }
+
+        function onModalTechSelectChange() {
+            const techId = document.getElementById('modalTechSelect').value;
+            selectedTechForMsg = technicians.find(t => t.id === techId) || null;
+            updatePreviewText();
+        }
+
+        function switchMessageType(type) {
+            activeMsgType = type;
+            if(type === 'technician') {
+                document.getElementById('techSelectArea').classList.remove('d-none');
+                onModalTechSelectChange();
+            } else {
+                document.getElementById('techSelectArea').classList.add('d-none');
+            }
+            updatePreviewText();
+        }
+
+        function updatePreviewText() {
+            if (!currentBooking) return;
+            const preview = document.getElementById('previewText');
+            if (activeMsgType === 'customer') {
+                preview.innerText = generateCustomerMsg(currentBooking);
+            } else {
+                preview.innerText = generateTechMsg(currentBooking, selectedTechForMsg);
+            }
+        }
+
+        function generateCustomerMsg(b) {
+            const techInfo = b.assignedTech ? `\n• टेक्नीशियन: ${b.assignedTech.name}` : '';
+            return `नमस्कार ${b.name} जी,\n\nM.K. Service में आपकी सर्विस बुकिंग ${b.status === 'कन्फर्म' ? 'कन्फर्म' : 'प्राप्त'} हो गई है।\n\n📋 विवरण:\n• ID: ${b.id}\n• सर्विस: ${b.service}\n• तारीख: ${b.date}\n• समय: ${b.time}\n• पता: ${b.address}${techInfo}\n\nधन्यवाद!\nM.K. Service`;
+        }
+
+        function generateTechMsg(b, tech) {
+            const techName = tech ? tech.name : 'टेक्नीशियन';
+            return `🔧 *M.K. SERVICE WORK ORDER*\n\nनमस्ते ${techName},\nआपको एक नई सर्विस जॉब असाइन की गई है:\n\n👤 *कस्टमर नाम:* ${b.name}\n📞 *फोन नंबर:* ${b.phone}\n🛠️ *सर्विस:* ${b.service}\n📅 *तारीख:* ${b.date}\n⏰ *समय:* ${b.time}\n📍 *पता:* ${b.address}\n\nकृपया कस्टमर से संपर्क करके समय पर सेवा प्रदान करें।`;
+        }
+
+        function getTargetPhone() {
+            if (!currentBooking) return '';
+            if (activeMsgType === 'customer') {
+                return currentBooking.phone.replace(/\D/g, '').slice(-10);
+            } else {
+                return selectedTechForMsg ? selectedTechForMsg.phone.replace(/\D/g, '').slice(-10) : '';
+            }
+        }
+
+        function sendWhatsApp() {
+            const phone = getTargetPhone();
+            if (!phone) {
+                alert('कृपया कोई टेक्नीशियन चुनें!');
+                return;
+            }
+            const text = encodeURIComponent(activeMsgType === 'customer' ? generateCustomerMsg(currentBooking) : generateTechMsg(currentBooking, selectedTechForMsg));
+            window.open(`https://wa.me/91${phone}?text=${text}`, '_blank');
+        }
+
+        function sendSMS() {
+            const phone = getTargetPhone();
+            if (!phone) {
+                alert('कृपया कोई टेक्नीशियन चुनें!');
+                return;
+            }
+            const text = encodeURIComponent(activeMsgType === 'customer' ? generateCustomerMsg(currentBooking) : generateTechMsg(currentBooking, selectedTechForMsg));
+            window.location.href = `sms:+91${phone}?body=${text}`;
+        }
+
+        function copyText() {
+            const text = activeMsgType === 'customer' ? generateCustomerMsg(currentBooking) : generateTechMsg(currentBooking, selectedTechForMsg);
+            navigator.clipboard.writeText(text).then(() => alert('मैसेज कॉपी हो गया है!'));
+        }
+
+        function renderBookings(filteredData = null) {
+            const data = filteredData || bookings;
+            const tbody = document.getElementById('bookingTableBody');
+            const mobileContainer = document.getElementById('mobileCardsContainer');
+            const noData = document.getElementById('noDataMessage');
+
+            tbody.innerHTML = '';
+            mobileContainer.innerHTML = '';
+            updateStats();
+
+            if (data.length === 0) {
+                noData.classList.remove('d-none');
+                return;
+            } else {
+                noData.classList.add('d-none');
+            }
+
+            data.forEach(b => {
+                const badge = b.status === 'कन्फर्म' ? 'badge-confirmed' : 'badge-pending';
+                const techNameDisplay = b.assignedTech ? b.assignedTech.name : '<span class="badge bg-light text-muted">अनअसाइन</span>';
+
+                // Desktop Row
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="fw-bold">${escapeHtml(b.name)}</div>
+                        <small class="text-muted">${escapeHtml(b.phone)}</small>
+                    </td>
+                    <td><span class="text-primary fw-semibold">${escapeHtml(b.service)}</span></td>
+                    <td><small>${escapeHtml(b.date)}<br>${escapeHtml(b.time)}</small></td>
+                    <td><small class="fw-semibold text-dark">${techNameDisplay}</small></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-success me-1" onclick='openModalById("${b.id}", "customer")' title="कस्टमर को भेजें"><i class="fa-solid fa-user"></i></button>
+                        <button class="btn btn-sm btn-tech me-1" onclick='openModalById("${b.id}", "technician")' title="टेक्नीशियन को भेजें"><i class="fa-solid fa-user-gear"></i></button>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick='editBooking("${b.id}")'><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick='deleteBooking("${b.id}")'><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // Mobile Card
+                const card = document.createElement('div');
+                card.className = 'card mb-3 p-3 border';
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="fw-bold mb-0">${escapeHtml(b.name)}</h6>
+                            <small class="text-primary fw-semibold">+91 ${escapeHtml(b.phone)}</small>
+                        </div>
+                        <span class="badge ${badge} px-2 py-1">${escapeHtml(b.status)}</span>
+                    </div>
+                    <div class="small text-secondary mb-2">
+                        <div><strong>सर्विस:</strong> ${escapeHtml(b.service)}</div>
+                        <div><strong>समय:</strong> ${escapeHtml(b.date)} | ${escapeHtml(b.time)}</div>
+                        <div><strong>पता:</strong> ${escapeHtml(b.address)}</div>
+                        <div><strong>टेक्नीशियन:</strong> ${b.assignedTech ? escapeHtml(b.assignedTech.name) : 'कोई नहीं'}</div>
+                    </div>
+                    <div class="d-flex gap-1 justify-content-end pt-2 border-top">
+                        <button class="btn btn-sm btn-success" onclick='openModalById("${b.id}", "customer")'><i class="fa-solid fa-user me-1"></i>कस्टमर</button>
+                        <button class="btn btn-sm btn-tech" onclick='openModalById("${b.id}", "technician")'><i class="fa-solid fa-user-gear me-1"></i>टेक</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick='editBooking("${b.id}")'><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick='deleteBooking("${b.id}")'><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                mobileContainer.appendChild(card);
+            });
+        }
+
+        function openModalById(id, type) {
+            const b = bookings.find(item => item.id === id);
+            if (b) openModal(b, type);
+        }
+
+        function editBooking(id) {
+            const b = bookings.find(item => item.id === id);
+            if (!b) return;
+
+            document.getElementById('bookingId').value = b.id;
+            document.getElementById('customerName').value = b.name;
+            document.getElementById('customerPhone').value = b.phone;
+            document.getElementById('serviceType').value = b.service;
+            document.getElementById('bookingDate').value = b.date;
+            document.getElementById('bookingTime').value = b.time;
+            document.getElementById('customerAddress').value = b.address;
+            document.getElementById('assignedTechSelect').value = b.assignedTech ? b.assignedTech.id : '';
+            document.getElementById('bookingStatus').value = b.status;
+
+            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-rotate me-2"></i>अपडेट करें';
+            document.getElementById('cancelEditBtn').classList.remove('d-none');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteBooking(id) {
+            if (confirm('क्या आप सच में डिलीट करना चाहते हैं?')) {
+                bookings = bookings.filter(b => b.id !== id);
+                saveBookingsToStorage();
+                renderBookings();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('bookingForm').reset();
+            document.getElementById('bookingId').value = '';
+            document.getElementById('bookingDate').valueAsDate = new Date();
+            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>बुकिंग सेव करें';
+            document.getElementById('cancelEditBtn').classList.add('d-none');
+        }
+
+        function filterBookings() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const st = document.getElementById('statusFilter').value;
+            const filtered = bookings.filter(b => {
+                const matchQ = b.name.toLowerCase().includes(q) || b.phone.includes(q) || b.service.toLowerCase().includes(q);
+                const matchSt = (st === 'all') || (b.status === st);
+                return matchQ && matchSt;
+            });
+            renderBookings(filtered);
+        }
+
+        function updateStats() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('statTotal').innerText = bookings.length;
+            document.getElementById('statConfirmed').innerText = bookings.filter(b => b.status === 'कन्फर्म').length;
+            document.getElementById('statPending').innerText = bookings.filter(b => b.status === 'पेंडिंग').length;
+            document.getElementById('statToday').innerText = bookings.filter(b => b.date === today).length;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>
